@@ -26,8 +26,8 @@ def mkdir(dir_path):
 def verify_exists(file_path):
     file_path = Path(file_path).resolve()
     if not file_path.exists():
-        return False #raise FileNotFoundError(f'The {file_path} is not exists!!!')
-    return True
+        raise FileNotFoundError(f'The {file_path} is not exists!!!')
+
 
 class YOLOV5CFG2COCO():
     def __init__(self, yaml_path):
@@ -163,13 +163,8 @@ class YOLOV5CFG2COCO():
                 sa, 1)).rsplit('.', 1)[0] + '.txt'
 
             img_path = Path(img_path)
-            #print(verify_exists(img_path))
-            if not verify_exists(img_path):
-               print(img_path)
-               continue
-            if not verify_exists(label_path):
-               print(label_path)
-               continue
+
+            verify_exists(img_path)
 
             imgsrc = cv2.imread(str(img_path))
             height, width = imgsrc.shape[:2]
@@ -221,7 +216,7 @@ class YOLOV5CFG2COCO():
             if len(label_info) < 5:
                 continue
 
-            category_id, track_id, vertex_info = label_info[0], label_info[1], label_info[2:]
+            category_id, vertex_info = label_info[0], label_info[1:]
             segmentation, bbox, area = self._get_annotation(vertex_info,
                                                             height, width)
             annotation.append({
@@ -232,7 +227,6 @@ class YOLOV5CFG2COCO():
                 'bbox': bbox,
                 'category_id': int(category_id)+1,
                 'id': self.annotation_id,
-                'track_id': track_id,
             })
             self.annotation_id += 1
         return annotation
