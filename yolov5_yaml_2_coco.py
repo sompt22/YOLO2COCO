@@ -24,6 +24,11 @@ def read_txt(txt_path):
 def mkdir(dir_path):
     Path(dir_path).mkdir(parents=True, exist_ok=True)
 
+def removedir(dir_path):
+    dirpath = Path(dir_path)
+    if dirpath.exists() and dirpath.is_dir():
+        shutil.rmtree(dirpath)
+        mkdir(dir_path)
 
 def verify_exists(file_path):
     file_path = Path(file_path).resolve()
@@ -56,15 +61,15 @@ class YOLOV5CFG2COCO():
 
         # 构建COCO格式目录
         self.dst = self.root_dir / f"{Path(self.root_data_dir).stem}_COCO_format"
-        self.coco_train = "train2017"
+        self.coco_train = "train"
         #self.coco_val = "val2017"
         self.coco_annotation = "annotations"
         self.coco_train_json = self.dst / self.coco_annotation / \
-            f'instances_{self.coco_train}.json'
+            f'{self.coco_train}.json'
         #self.coco_val_json = self.dst / self.coco_annotation / \
             #f'instances_{self.coco_val}.json'
 
-        mkdir(self.dst)
+        removedir(self.dst)
         mkdir(self.dst / self.coco_train)
         #mkdir(self.dst / self.coco_val)
         mkdir(self.dst / self.coco_annotation)
@@ -79,7 +84,7 @@ class YOLOV5CFG2COCO():
         self.info = {
             'year': int(cur_year),
             'version': '1.0',
-            'description': 'For object detection',
+            'description': 'For multi object tracking',
             'date_created': cur_year,
         }
 
@@ -185,7 +190,7 @@ class YOLOV5CFG2COCO():
                 cv2.imwrite(str(save_img_path), imgsrc)
 
             images.append({
-                'date_captured': '2021',
+                'date_captured': '2023',
                 'file_name': dest_file_name,
                 'id': img_id,
                 'height': height,
@@ -217,11 +222,8 @@ class YOLOV5CFG2COCO():
     def read_annotation(self, txt_file, img_id, height, width):
         annotation = []
         all_info = read_txt(txt_file)
-        #print(txt_file)
         for label_info in all_info:
-            # 遍历一张图中不同标注对象
             label_info = label_info.split()
-            #label_info = re.split(r'\s{2,}', label_info)
             if len(label_info) < 5:
                 continue
 
