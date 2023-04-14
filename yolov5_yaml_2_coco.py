@@ -8,6 +8,8 @@ import shutil
 import time
 from pathlib import Path
 
+import re
+
 import cv2
 import yaml
 from tqdm import tqdm
@@ -39,7 +41,7 @@ class YOLOV5CFG2COCO():
         self.root_data_dir = Path(self.data_cfg.get('path'))
 
         self.train_path = self._get_data_dir('train')
-        self.val_path = self._get_data_dir('val')
+        #self.val_path = self._get_data_dir('val')
 
         nc = self.data_cfg['nc']
 
@@ -55,16 +57,16 @@ class YOLOV5CFG2COCO():
         # 构建COCO格式目录
         self.dst = self.root_dir / f"{Path(self.root_data_dir).stem}_COCO_format"
         self.coco_train = "train2017"
-        self.coco_val = "val2017"
+        #self.coco_val = "val2017"
         self.coco_annotation = "annotations"
         self.coco_train_json = self.dst / self.coco_annotation / \
             f'instances_{self.coco_train}.json'
-        self.coco_val_json = self.dst / self.coco_annotation / \
-            f'instances_{self.coco_val}.json'
+        #self.coco_val_json = self.dst / self.coco_annotation / \
+            #f'instances_{self.coco_val}.json'
 
         mkdir(self.dst)
         mkdir(self.dst / self.coco_train)
-        mkdir(self.dst / self.coco_val)
+        #mkdir(self.dst / self.coco_val)
         mkdir(self.dst / self.coco_annotation)
 
         # 构建json内容结构
@@ -111,15 +113,15 @@ class YOLOV5CFG2COCO():
 
     def generate(self):
         self.train_files = self.get_files(self.train_path)
-        self.valid_files = self.get_files(self.val_path)
+        #self.valid_files = self.get_files(self.val_path)
 
         train_dest_dir = Path(self.dst) / self.coco_train
         self.gen_dataset(self.train_files, train_dest_dir,
                          self.coco_train_json, mode='train')
 
-        val_dest_dir = Path(self.dst) / self.coco_val
-        self.gen_dataset(self.valid_files, val_dest_dir,
-                         self.coco_val_json, mode='val')
+        #val_dest_dir = Path(self.dst) / self.coco_val
+        #self.gen_dataset(self.valid_files, val_dest_dir,
+                         #self.coco_val_json, mode='val')
 
         print(f"The output directory is: {self.dst}")
 
@@ -215,9 +217,11 @@ class YOLOV5CFG2COCO():
     def read_annotation(self, txt_file, img_id, height, width):
         annotation = []
         all_info = read_txt(txt_file)
+        #print(txt_file)
         for label_info in all_info:
             # 遍历一张图中不同标注对象
-            label_info = label_info.split(" ")
+            label_info = label_info.split()
+            #label_info = re.split(r'\s{2,}', label_info)
             if len(label_info) < 5:
                 continue
 
@@ -239,6 +243,7 @@ class YOLOV5CFG2COCO():
 
     @staticmethod
     def _get_annotation(vertex_info, height, width):
+        #print(vertex_info)
         cx, cy, w, h = [float(i) for i in vertex_info]
 
         cx = cx * width
