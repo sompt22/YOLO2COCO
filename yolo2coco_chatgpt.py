@@ -350,3 +350,192 @@ yolo_annotations = read_yolo_annotations('/path/to/annotation/directory')
 image_directory = '/path/to/image/directory'
 output_directory = '/path/to/output/directory'
 overlay_boxes_on_images(yolo_annotations, image_directory, output_directory)
+
+
+
+
+import os
+
+def merge_yolo_sequences(seq1_dir, seq2_dir, output_dir, track_id_offset=100):
+    # Read in the annotations for both sequences
+    seq1_annos = []
+    for file_name in os.listdir(seq1_dir):
+        if file_name.endswith('.txt'):
+            with open(os.path.join(seq1_dir, file_name), 'r') as f:
+                seq1_annos.append([line.strip().split() for line in f])
+    
+    seq2_annos = []
+    for file_name in os.listdir(seq2_dir):
+        if file_name.endswith('.txt'):
+            with open(os.path.join(seq2_dir, file_name), 'r') as f:
+                seq2_annos.append([line.strip().split() for line in f])
+    
+    # Generate new track IDs for the objects in the first sequence
+    for i, seq in enumerate(seq1_annos):
+        for j, obj in enumerate(seq):
+            obj[1] = str(int(obj[1]) + track_id_offset * i)
+    
+    # Append the modified annotations for the first sequence to the annotations for the second sequence
+    merged_annos = seq2_annos + seq1_annos
+    
+    # Generate new track IDs for the objects in the second sequence
+    for i, seq in enumerate(seq2_annos):
+        for j, obj in enumerate(seq):
+            obj[1] = str(int(obj[1]) + track_id_offset * (i + len(seq1_annos)))
+    
+    # Write out the merged annotations with the modified track IDs
+    for i, seq in enumerate(merged_annos):
+        seq_file_name = os.path.join(output_dir, f'seq{i:03d}.txt')
+        with open(seq_file_name, 'w') as f:
+            for obj in seq:
+                f.write(' '.join(obj) + '\n')
+
+
+seq1_dir = '/path/to/seq1/annotations'
+seq2_dir = '/path/to/seq2/annotations'
+output_dir = '/path/to/merged/annotations'
+merge_yolo_sequences(seq1_dir, seq2_dir, output_dir)
+
+
+
+import os
+
+def merge_yolo_sequences(seq1_dir, seq2_dir, output_dir, track_id_offset=None):
+    # Read in the annotations for both sequences
+    seq1_annos = []
+    for file_name in os.listdir(seq1_dir):
+        if file_name.endswith('.txt'):
+            with open(os.path.join(seq1_dir, file_name), 'r') as f:
+                seq1_annos.append([line.strip().split() for line in f])
+    
+    seq2_annos = []
+    for file_name in os.listdir(seq2_dir):
+        if file_name.endswith('.txt'):
+            with open(os.path.join(seq2_dir, file_name), 'r') as f:
+                seq2_annos.append([line.strip().split() for line in f])
+    
+    # Calculate the necessary track ID offset
+    if track_id_offset is None:
+        seq1_max_id = max([int(obj[1]) for seq in seq1_annos for obj in seq])
+        seq2_max_id = max([int(obj[1]) for seq in seq2_annos for obj in seq])
+        track_id_offset = max(seq1_max_id, seq2_max_id) + 1
+    
+    # Generate new track IDs for the objects in the first sequence
+    for i, seq in enumerate(seq1_annos):
+        for j, obj in enumerate(seq):
+            obj[1] = str(int(obj[1]) + track_id_offset * i)
+    
+    # Append the modified annotations for the first sequence to the annotations for the second sequence
+    merged_annos = seq2_annos + seq1_annos
+    
+    # Generate new track IDs for the objects in the second sequence
+    for i, seq in enumerate(seq2_annos):
+        for j, obj in enumerate(seq):
+            obj[1] = str(int(obj[1]) + track_id_offset * (i + len(seq1_annos)))
+    
+    # Write out the merged annotations with the modified track IDs
+    for i, seq in enumerate(merged_annos):
+        seq_file_name = os.path.join(output_dir, f'seq{i:03d}.txt')
+        with open(seq_file_name, 'w') as f:
+            for obj in seq:
+                f.write(' '.join(obj) + '\n')
+    
+    return track_id_offset
+
+
+seq1_dir = '/path/to/seq1/annotations'
+
+
+import os
+
+def merge_yolo_sequences(seq_dirs, output_dir, track_id_offset=None):
+    # Read in the annotations for each sequence
+    all_annos = []
+    for seq_dir in seq_dirs:
+        seq_annos = []
+        for file_name in os.listdir(seq_dir):
+            if file_name.endswith('.txt'):
+                with open(os.path.join(seq_dir, file_name), 'r') as f:
+                    seq_annos.append([line.strip().split() for line in f])
+        all_annos.append(seq_annos)
+    
+    # Calculate the necessary track ID offset
+    if track_id_offset is None:
+        max_ids = [max([int(obj[1]) for seq in annos for obj in seq]) for annos in all_annos]
+        track_id_offset = max(max_ids) + 1
+    
+    # Generate new track IDs for each object in each sequence
+    for i, seq_annos in enumerate(all_annos):
+        for j, seq in enumerate(seq_annos):
+            for k, obj in enumerate(seq):
+                obj[1] = str(int(obj[1]) + track_id_offset * (j + len(seq_annos) * i))
+    
+    # Concatenate the annotations for all sequences
+    merged_annos = sum(all_annos, [])
+    
+    # Write out the merged annotations with the modified track IDs
+    for i, seq in enumerate(merged_annos):
+        seq_file_name = os.path.join(output_dir, f'seq{i:03d}.txt')
+        with open(seq_file_name, 'w') as f:
+            for obj in seq:
+                f.write(' '.join(obj) + '\n')
+    
+    return track_id_offset
+
+
+seq_dirs = ['/path/to/seq1/annotations', '/path/to/seq2/annotations', '/path/to/seq3/annotations']
+output_dir = '/path/to/merged/annotations'
+merge_yolo_sequences(seq_dirs, output_dir, track_id_offset=None)
+
+
+
+import os
+
+def merge_yolo_sequences(seq_dirs, output_dirs, track_id_offset=None):
+    if len(seq_dirs) != len(output_dirs):
+        raise ValueError('Number of input and output directories must match.')
+    
+    # Read in the annotations for each sequence
+    all_annos = []
+    for seq_dir in seq_dirs:
+        seq_annos = []
+        for file_name in os.listdir(seq_dir):
+            if file_name.endswith('.txt'):
+                with open(os.path.join(seq_dir, file_name), 'r') as f:
+                    seq_annos.append([line.strip().split() for line in f])
+        all_annos.append(seq_annos)
+    
+    # Calculate the necessary track ID offset
+    if track_id_offset is None:
+        max_ids = [max([int(obj[1]) for seq in annos for obj in seq]) for annos in all_annos]
+        track_id_offset = max(max_ids) + 1
+    
+    # Generate new track IDs for each object in each sequence
+    for i, seq_annos in enumerate(all_annos):
+        for j, seq in enumerate(seq_annos):
+            for k, obj in enumerate(seq):
+                obj[1] = str(int(obj[1]) + track_id_offset * (j + len(seq_annos) * i))
+    
+    # Concatenate the annotations for all sequences
+    merged_annos = sum(all_annos, [])
+    
+    # Write out the merged annotations with the modified track IDs
+    for i, seq_annos in enumerate(all_annos):
+        output_dir = output_dirs[i]
+        for j, seq in enumerate(seq_annos):
+            seq_file_name = os.path.join(output_dir, f'seq{j:03d}.txt')
+            with open(seq_file_name, 'w') as f:
+                for obj in seq:
+                    f.write(' '.join(obj) + '\n')
+    
+    return track_id_offset
+
+
+seq_dirs = ['/path/to/seq1/annotations', '/path/to/seq2/annotations', '/path/to/seq3/annotations']
+output_dirs = ['/path/to/merged/seq1/annotations', '/path/to/merged/seq2/annotations', '/path/to/merged/seq3/annotations']
+merge_yolo_sequences(seq_dirs, output_dirs, track_id_offset=None)
+
+
+
+
+
