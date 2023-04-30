@@ -238,7 +238,7 @@ class YOLOV5CFG2COCO():
                 'bbox': bbox,
                 'category_id': int(category_id)+1,
                 'id': self.annotation_id,
-                'track_id': track_id,
+                'track_id': int(track_id),
             })
             self.annotation_id += 1
         return annotation
